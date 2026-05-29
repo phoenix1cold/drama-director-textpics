@@ -1,0 +1,311 @@
+<div class="dd-textpics-panel" data-editor-mode="off">
+
+  {{!-- ── EDITOR-MODE TOGGLE (top of panel) ── --}}
+  <div class="dd-tp-mode-bar" role="tablist">
+    <button type="button" class="dd-tp-mode-btn active" data-mode="simple" role="tab" aria-selected="true">
+      <i class="fas fa-th-large"></i> {{localize "DDTEXTPICS.editor.simpleMode"}}
+    </button>
+    <button type="button" class="dd-tp-mode-btn" data-mode="timeline" role="tab" aria-selected="false" title="{{localize "DDTEXTPICS.editor.toggleHint"}}">
+      <i class="fas fa-stream"></i> {{localize "DDTEXTPICS.editor.timelineMode"}}
+    </button>
+  </div>
+
+  {{!-- ── TOP BAR ── --}}
+  <div class="dd-tp-topbar">
+
+    {{!-- Row 1: Target + Load preset --}}
+    <div class="dd-tp-topbar-row">
+      <div class="dd-tp-topbar-pill">
+        <span class="dd-tp-pill-label"><i class="fas fa-crosshairs"></i> {{localize "DRAMADIRECTOR.target"}}</span>
+        <select id="dd-target-user" class="dd-select dd-tp-target-select">
+          <option value="">{{localize "DRAMADIRECTOR.allPlayers"}}</option>
+          {{#each users}}
+          <option value="{{this.id}}" style="color:{{this.color}}">{{this.name}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <div class="dd-tp-topbar-pill dd-tp-topbar-pill--grow">
+        <span class="dd-tp-pill-label"><i class="fas fa-upload"></i> {{localize "DRAMADIRECTOR.presetLoad"}}</span>
+        <select id="dd-preset-select" class="dd-select dd-tp-preset-select">
+          <option value="">— {{localize "DRAMADIRECTOR.presetLoad"}} —</option>
+          {{#each presets}}
+          <option value="{{this}}">{{this}}</option>
+          {{/each}}
+        </select>
+        <button type="button" class="dd-tp-pill-btn" data-action="preset-load" title="{{localize "DRAMADIRECTOR.presetLoad"}}">
+          <i class="fas fa-upload"></i> {{localize "DRAMADIRECTOR.presetLoad"}}
+        </button>
+        <button type="button" class="dd-tp-pill-btn dd-tp-pill-btn--danger" data-action="preset-delete" title="{{localize "DRAMADIRECTOR.presetDelete"}}">
+          <i class="fas fa-trash"></i> {{localize "DRAMADIRECTOR.presetDelete"}}
+        </button>
+      </div>
+    </div>
+
+    {{!-- Row 2: Save preset --}}
+    <div class="dd-tp-topbar-row">
+      <div class="dd-tp-topbar-pill dd-tp-topbar-pill--full">
+        <span class="dd-tp-pill-label"><i class="fas fa-save"></i> {{localize "DRAMADIRECTOR.presetSave"}}</span>
+        <input type="text" id="dd-preset-name" class="dd-input dd-tp-preset-name-inp" placeholder="{{localize "DRAMADIRECTOR.presetName"}}">
+        <button type="button" class="dd-tp-pill-btn dd-tp-pill-btn--accent" data-action="preset-save">
+          <i class="fas fa-save"></i> {{localize "DRAMADIRECTOR.presetSave"}}
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  {{!-- ── MAIN SPLIT ── --}}
+  <div class="dd-tp-body" data-tp-view="simple">
+
+    {{!-- LEFT: tabbed layers --}}
+    <div class="dd-tp-left">
+
+      {{!-- Tab Bar --}}
+      <div class="dd-tp-tabs">
+        <button type="button" class="dd-tp-tab active" data-tab="text">
+          <i class="fas fa-font"></i> {{localize "DRAMADIRECTOR.textLayers"}}
+          <span id="dd-text-layer-count" class="dd-badge dd-tab-badge">0/10</span>
+        </button>
+        <button type="button" class="dd-tp-tab" data-tab="images">
+          <i class="fas fa-image"></i> {{localize "DRAMADIRECTOR.imageLayers"}}
+          <span id="dd-image-layer-count" class="dd-badge dd-tab-badge">0/10</span>
+        </button>
+        <button type="button" class="dd-tp-tab" data-tab="video">
+          <i class="fas fa-film"></i> {{localize "DRAMADIRECTOR.tp.tabVideo"}}
+          <span id="dd-video-layer-count" class="dd-badge dd-tab-badge">0/5</span>
+        </button>
+        <button type="button" class="dd-tp-tab" data-tab="sequence">
+          <i class="fas fa-photo-film"></i> {{localize "DRAMADIRECTOR.tp.tabSequence"}}
+          <span id="dd-seq-layer-count" class="dd-badge dd-tab-badge">0/5</span>
+        </button>
+        <button type="button" class="dd-tp-tab" data-tab="extras">
+          <i class="fas fa-sliders-h"></i> {{localize "DRAMADIRECTOR.tp.tabExtras"}}
+        </button>
+      </div>
+
+      {{!-- Tab: Text Layers --}}
+      <div class="dd-tp-tab-panel" data-tab-panel="text">
+        <div class="dd-tp-tab-actions">
+          <button type="button" class="dd-tp-add-btn" data-action="add-text-layer">
+            <i class="fas fa-plus"></i> {{localize "DRAMADIRECTOR.addTextLayer"}}
+          </button>
+        </div>
+        <div id="dd-text-layers-container" class="dd-layers-container"></div>
+      </div>
+
+      {{!-- Tab: Image Layers --}}
+      <div class="dd-tp-tab-panel" data-tab-panel="images" style="display:none">
+        <div class="dd-tp-tab-actions">
+          <button type="button" class="dd-tp-add-btn" data-action="add-image-layer">
+            <i class="fas fa-plus"></i> {{localize "DRAMADIRECTOR.addImageLayer"}}
+          </button>
+        </div>
+        <div id="dd-image-layers-container" class="dd-layers-container"></div>
+      </div>
+
+      {{!-- Tab: Video Layers --}}
+      <div class="dd-tp-tab-panel" data-tab-panel="video" style="display:none">
+        <div class="dd-tp-tab-actions">
+          <button type="button" class="dd-tp-add-btn" data-action="add-video-layer">
+            <i class="fas fa-plus"></i> {{localize "DRAMADIRECTOR.tp.addVideoLayer"}}
+          </button>
+        </div>
+        <div id="dd-video-layers-container" class="dd-layers-container"></div>
+      </div>
+
+      {{!-- Tab: Sequence Layers --}}
+      <div class="dd-tp-tab-panel" data-tab-panel="sequence" style="display:none">
+        <div class="dd-tp-tab-actions">
+          <button type="button" class="dd-tp-add-btn" data-action="add-seq-layer">
+            <i class="fas fa-plus"></i> {{localize "DRAMADIRECTOR.tp.addSeqLayer"}}
+          </button>
+        </div>
+        <p class="dd-hint-block" style="font-size:.7rem;margin:.3rem .5rem">
+          <i class="fas fa-info-circle"></i> {{localize "DRAMADIRECTOR.tp.seqHint"}}
+        </p>
+        <div id="dd-seq-layers-container" class="dd-layers-container"></div>
+      </div>
+
+      {{!-- Tab: Extras --}}
+      <div class="dd-tp-tab-panel dd-tp-extras-panel" data-tab-panel="extras" style="display:none">
+
+        {{!-- Character Portrait --}}
+        <div class="dd-panel-section dd-tp-extras-section">
+          <div class="dd-section-header">
+            <h3><i class="fas fa-user-circle"></i> {{localize "DRAMADIRECTOR.charIntro"}}</h3>
+            <label class="dd-checkbox-label" style="margin:0">
+              <input type="checkbox" id="dd-char-intro-enabled">
+              <span style="font-size:11px">{{localize "DRAMADIRECTOR.tp.charIntroEnable"}}</span>
+            </label>
+          </div>
+          <div id="dd-char-intro-panel" class="dd-char-intro-panel dd-hidden">
+            <div class="dd-char-intro-preview">
+              <div class="dd-char-intro-frame" id="dd-char-preview-frame">
+                <div class="dd-char-preview-portrait" id="dd-char-preview-img"></div>
+                <div class="dd-char-preview-label">{{localize "DRAMADIRECTOR.charIntroToken"}}</div>
+              </div>
+            </div>
+            <div class="dd-row" style="margin-top:.5rem">
+              <select id="dd-char-intro-token" class="dd-select" style="flex:1">
+                <option value="">— {{localize "DRAMADIRECTOR.charIntroToken"}} —</option>
+              </select>
+            </div>
+            <label class="dd-checkbox-label" style="margin-top:.3rem">
+              <input type="checkbox" id="dd-use-selected-token">
+              <span>{{localize "DRAMADIRECTOR.charIntroUseSelected"}}</span>
+            </label>
+            <div class="dd-row" style="margin-top:.3rem">
+              <label class="dd-label" style="margin:0;white-space:nowrap">{{localize "DRAMADIRECTOR.charIntroAnim"}}</label>
+              <select id="dd-char-intro-anim" class="dd-select" style="flex:1">
+                <option value="fade">{{localize "DRAMADIRECTOR.charIntroAnimFade"}}</option>
+                <option value="slideLeft">{{localize "DRAMADIRECTOR.charIntroAnimSlideLeft"}}</option>
+                <option value="slideRight">{{localize "DRAMADIRECTOR.charIntroAnimSlideRight"}}</option>
+                <option value="slideUp">{{localize "DRAMADIRECTOR.slideUp"}}</option>
+                <option value="slideDown">{{localize "DRAMADIRECTOR.slideDown"}}</option>
+                <option value="zoom">{{localize "DRAMADIRECTOR.charIntroAnimZoom"}}</option>
+                <option value="smoke">{{localize "DRAMADIRECTOR.charIntroAnimSmoke"}}</option>
+                <option value="flip">{{localize "DRAMADIRECTOR.flipAnim"}}</option>
+                <option value="bounce">{{localize "DRAMADIRECTOR.bounceAnim"}}</option>
+              </select>
+            </div>
+            <div id="dd-char-sliders" style="margin-top:.4rem"></div>
+            <label class="dd-checkbox-label" style="margin-top:.4rem">
+              <input type="checkbox" id="dd-hide-portrait-frame">
+              <span>{{localize "DRAMADIRECTOR.hidePortraitFrame"}}</span>
+            </label>
+          </div>
+        </div>
+
+        {{!-- Screen Effects --}}
+        <div class="dd-panel-section dd-tp-extras-section">
+          <h3><i class="fas fa-magic"></i> {{localize "DRAMADIRECTOR.tp.screenEffects"}}
+            <span class="dd-badge" style="background:rgba(100,100,200,.15);color:#99aaff;border-color:rgba(100,100,200,.3)">{{localize "DRAMADIRECTOR.optional"}}</span>
+          </h3>
+          <p style="font-size:10px;color:#aaa;margin:0 0 6px">{{localize "DRAMADIRECTOR.tp.screenEffectsHint"}}</p>
+          <div class="dd-textpic-effects-grid">
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="vignette"><span>🔲 Vignette</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="grayscale"><span>⬜ Grayscale</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="sepia"><span>🟫 Sepia</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="film"><span>🎞 Film</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="sketch"><span>✏ Sketch</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="drunk"><span>🌀 Drunk</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="high"><span>💫 High</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="glitch"><span>⚡ Glitch</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="blood"><span>🩸 Blood</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="sakura"><span>🌸 Sakura</span></label>
+            <label class="dd-textpic-effect-label"><input type="checkbox" class="dd-textpic-effect-chk" data-effect="hearts"><span>💕 Hearts</span></label>
+          </div>
+        </div>
+
+        {{!-- Sound --}}
+        <div class="dd-panel-section dd-tp-extras-section">
+          <h3><i class="fas fa-volume-up"></i> {{localize "DRAMADIRECTOR.sceneSound"}}
+            <span class="dd-badge" style="background:rgba(100,100,200,.15);color:#99aaff;border-color:rgba(100,100,200,.3)">{{localize "DRAMADIRECTOR.optional"}}</span>
+          </h3>
+          <div class="dd-sound-picker">
+            <input type="text" id="dd-textpic-sound" class="dd-input" placeholder="{{localize "DRAMADIRECTOR.soundPath"}}">
+            <button type="button" class="dd-icon-btn" data-action="browse-textpic-sound"><i class="fas fa-folder-open"></i></button>
+          </div>
+          <div class="dd-slider-row" style="margin-top:.3rem">
+            <span class="dd-slider-label">{{localize "DRAMADIRECTOR.volume"}}</span>
+            <input type="range" class="dd-slider" id="dd-snd-vol-range" min="0" max="1" step="0.05" value="0.7">
+            <input type="number" class="dd-slider-num dd-input" id="dd-textpic-sound-vol" min="0" max="1" step="0.05" value="0.7">
+          </div>
+          <label class="dd-checkbox-label" style="margin-top:.4rem">
+            <input type="checkbox" id="dd-sound-fade-out">
+            <span><i class="fas fa-volume-down" style="margin-right:.25rem;color:#99aaff"></i>{{localize "DRAMADIRECTOR.tp.soundFadeOut"}}</span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    {{!-- RIGHT: preview --}}
+    <div class="dd-tp-preview-col">
+      <div class="dd-preview-header">
+        <span><i class="fas fa-eye"></i> {{localize "DRAMADIRECTOR.tp.preview"}}</span>
+        <button type="button" class="dd-preview-refresh-btn" id="dd-preview-refresh" title="{{localize "DRAMADIRECTOR.tp.refresh"}}"><i class="fas fa-sync-alt"></i></button>
+      </div>
+      <div class="dd-textpics-preview" id="dd-textpics-preview">
+        <div class="dd-preview-stage" id="dd-preview-stage"></div>
+        <div class="dd-preview-empty" id="dd-preview-empty">
+          <i class="fas fa-layer-group"></i><span>{{localize "DRAMADIRECTOR.tp.addLayers"}}</span>
+        </div>
+      </div>
+      <p class="dd-preview-hint-text">{{localize "DRAMADIRECTOR.tp.previewHint"}}</p>
+      <div class="dd-preview-legend" id="dd-preview-legend"></div>
+    </div>
+
+  </div>
+
+  {{!-- ── TIMELINE / EDITOR VIEW (hidden in simple mode) ── --}}
+  <div class="dd-tp-timeline-view" data-tp-view="timeline" hidden>
+    {{!-- Top: transport + global duration --}}
+    <div class="dd-tl-transport">
+      <button type="button" class="dd-tl-btn" data-action="tl-play"  title="{{localize "DDTEXTPICS.editor.play"}}"><i class="fas fa-play"></i></button>
+      <button type="button" class="dd-tl-btn" data-action="tl-pause" title="{{localize "DDTEXTPICS.editor.pause"}}"><i class="fas fa-pause"></i></button>
+      <button type="button" class="dd-tl-btn" data-action="tl-stop"  title="{{localize "DDTEXTPICS.editor.stop"}}"><i class="fas fa-stop"></i></button>
+      <span class="dd-tl-time" id="dd-tl-time">0 / 0 ms</span>
+      <span class="dd-tl-spacer"></span>
+      <label class="dd-tl-duration-label">
+        <span>{{localize "DDTEXTPICS.editor.totalDuration"}}</span>
+        <input type="number" id="dd-tl-total-duration" class="dd-input" min="500" max="60000" step="100" value="4000">
+      </label>
+    </div>
+
+    {{!-- Main split: tracks on the left, keyframe editor on the right --}}
+    <div class="dd-tl-body">
+      <div class="dd-tl-tracks-wrap">
+        <div class="dd-tl-ruler" id="dd-tl-ruler"></div>
+        <div class="dd-tl-tracks" id="dd-tl-tracks">
+          <div class="dd-tl-empty">{{localize "DDTEXTPICS.editor.noClipsHint"}}</div>
+        </div>
+        <div class="dd-tl-playhead" id="dd-tl-playhead"></div>
+      </div>
+
+      <div class="dd-tl-side">
+        <div class="dd-tl-side-header">
+          <span id="dd-tl-side-title"><i class="fas fa-mouse-pointer"></i> {{localize "DDTEXTPICS.editor.selectClipHint"}}</span>
+          <button type="button" class="dd-tl-btn dd-hidden" data-action="tl-add-key">
+            <i class="fas fa-plus-circle"></i> {{localize "DDTEXTPICS.editor.addKey"}}
+          </button>
+        </div>
+        <div class="dd-tl-side-body" id="dd-tl-side-body">
+          <div class="dd-tl-side-hint">{{localize "DDTEXTPICS.editor.selectClipHint"}}</div>
+        </div>
+      </div>
+    </div>
+
+    {{!-- Live preview pinned at the bottom --}}
+    <div class="dd-tl-preview-wrap">
+      <div class="dd-tl-preview-header"><i class="fas fa-eye"></i> {{localize "DRAMADIRECTOR.tp.preview"}}</div>
+      <div class="dd-tl-preview" id="dd-tl-preview"><div class="dd-tl-preview-stage" id="dd-tl-preview-stage"></div></div>
+    </div>
+  </div>
+
+  {{!-- ── BOTTOM ACTION BAR ── --}}
+  <div class="dd-tp-action-bar">
+    <div class="dd-tp-duration">
+      <span class="dd-slider-label" style="white-space:nowrap">⏱ {{localize "DRAMADIRECTOR.textDuration"}} ms</span>
+      <input type="range"  class="dd-slider" id="dd-text-duration-range" min="1000" max="30000" step="500" value="4000">
+      <input type="number" class="dd-slider-num dd-input" id="dd-text-duration" min="1000" max="30000" step="500" value="4000">
+      <label class="dd-checkbox-label dd-hold-label" title="{{localize "DRAMADIRECTOR.holdUntilDismissedHint"}}">
+      <input type="checkbox" id="dd-hold-until-dismissed">
+      <span>🔒 {{localize "DRAMADIRECTOR.tp.hold"}}</span>
+    </label>
+    </div>
+    <div class="dd-tp-actions">
+      <button type="button" class="dd-show-btn dd-action-play" data-action="show-text">
+        <i class="fas fa-play"></i> {{localize "DRAMADIRECTOR.show"}}
+      </button>
+      <button type="button" class="dd-icon-btn dd-macro-btn" data-action="copy-macro" title="{{localize "DRAMADIRECTOR.copyMacro"}}">
+        <i class="fas fa-code"></i>
+      </button>
+      <button type="button" class="dd-clear-btn dd-action-clear" data-action="clear">
+        <i class="fas fa-times"></i> {{localize "DRAMADIRECTOR.clearBtn"}}
+      </button>
+    </div>
+  </div>
+
+</div>

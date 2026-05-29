@@ -1,0 +1,22 @@
+# OS / IDE junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build artefacts
+*.zip
+dist/
+build/
+*.log
+
+# Node (if you ever lint locally)
+node_modules/
+package-lock.json
+
+# Foundry-side dev
+.foundryvtt/

@@ -1,0 +1,64 @@
+name: Release
+
+# Cuts a Foundry-compatible release whenever you push a tag like v1.2.3.
+# It bumps the version + URLs in module.json to match the tag, zips the
+# whole repo as module.zip, and attaches both module.json and module.zip
+# to the GitHub release. Foundry's "Install Module → Manifest URL" of
+# https://github.com/<user>/<repo>/releases/latest/download/module.json
+# will then always point at the latest published release.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: ver
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Patch module.json with release URLs
+        env:
+          VERSION: ${{ steps.ver.outputs.VERSION }}
+          REPO:    ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          v    = os.environ['VERSION']
+          repo = os.environ['REPO']
+          p = 'module.json'
+          j = json.load(open(p))
+          j['version']   = v
+          j['url']       = f'https://github.com/{repo}'
+          j['manifest']  = f'https://github.com/{repo}/releases/latest/download/module.json'
+          j['download']  = f'https://github.com/{repo}/releases/download/v{v}/module.zip'
+          json.dump(j, open(p, 'w'), ensure_ascii=False, indent=2)
+          PY
+
+      - name: Build module.zip
+        run: |
+          # Zip everything except VCS / CI / build artefacts.
+          zip -r module.zip . \
+            -x '.git/*' '.github/*' '.gitignore' '*.zip' \
+               'node_modules/*' 'dist/*' 'build/*'
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            module.json
+            module.zip
