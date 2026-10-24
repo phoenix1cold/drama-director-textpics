@@ -1,3 +1,5 @@
+> Локальная сборка 1.1.0-local.1: см. LOCAL_BUILD_RU.md. Описание ниже относится к исходному проекту.
+
 # Drama Director — Text & Pictures
 
 <p align="center">

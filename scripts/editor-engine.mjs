@@ -38,7 +38,8 @@ const EASING = {
 export function sampleKeyframes(keys, prop, t, fallback) {
   if (!Array.isArray(keys) || !keys.length) return fallback;
   // Sort once defensively, callers should keep sorted but cheap insurance.
-  const sorted = [...keys].sort((a, b) => (a.t ?? 0) - (b.t ?? 0));
+  const sorted = keys.filter(k => k && k[prop] !== undefined && Number.isFinite(k.t)).sort((a, b) => a.t - b.t);
+  if (!sorted.length) return fallback;
   // Before first key.
   if (t <= sorted[0].t) return sorted[0][prop] ?? fallback;
   // After last key.

@@ -30,7 +30,7 @@
         <select id="dd-preset-select" class="dd-select dd-tp-preset-select">
           <option value="">— {{localize "DRAMADIRECTOR.presetLoad"}} —</option>
           {{#each presets}}
-          <option value="{{this}}">{{this}}</option>
+          <option value="{{this.name}}">{{this.name}}</option>
           {{/each}}
         </select>
         <button type="button" class="dd-tp-pill-btn" data-action="preset-load" title="{{localize "DRAMADIRECTOR.presetLoad"}}">

@@ -1,10 +1,11 @@
+import { TextPicsRuntime } from './runtime.mjs';
 /**
  * Drama Director — Text & Pics — Panel (ApplicationV2)
  * Extracted from the original panels.mjs.
  *
  * Storage of named presets is owned by THIS module ('drama-director-textpics').
  * Actual rendering (text/image overlays, ::after grain, video/seq layers)
- * delegates to the cinematic module via game.dramaDirector if present.
+ * is implemented by this module's own runtime.
  */
 
 import {
@@ -16,7 +17,6 @@ import {
 } from './editor-engine.mjs';
 
 const MODULE_ID = 'drama-director-textpics';
-const CINEMATIC_ID = 'drama-director-cinematic';
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
 // ── Helpers: preset CRUD (settings are owned by THIS module) ────────────────
@@ -38,16 +38,8 @@ async function _deleteTextPreset(name) {
   return presets;
 }
 
-// ── Helpers: bridge to cinematic effect engine (optional) ───────────────────
-function _cinematic() {
-  if (!game.modules.get(CINEMATIC_ID)?.active) return null;
-  return globalThis.game?.dramaDirector ?? null;
-}
-function _warnNoCinematic() {
-  const msg = game.i18n.localize('DDTEXTPICS.warn.cinematicMissing')
-    || 'Drama Director — Cinematic is not enabled. Effect cannot render.';
-  ui.notifications?.warn(msg);
-}
+// Feature-owned playback engine; never borrows another module's globals.
+function _runtime() { return TextPicsRuntime; }
 
 export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -70,6 +62,7 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
   }
 
   _onRender(context, options) {
+    this._cleanupPreview?.();
     const html = this.element;
 
     // ── Tab switching ────────────────────────────────────────────────────────
@@ -1004,6 +997,7 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
         imageLayers: _resolvedImages,
         videoLayers: _videoLayers.filter(l => l.url),
         seqLayers:   _seqLayers.filter(l => l.firstFile && l.lastFile),
+        audioLayers: _audioLayers.filter(l => l.url),
         screenEffects: screenEffects.length ? screenEffects : undefined,
         soundUrl:     soundUrl || undefined,
         soundVol:     soundUrl ? soundVol : undefined,
@@ -1171,27 +1165,27 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
     html.querySelector('[data-action="show-text"]')?.addEventListener('click', () => {
       const opts = collectOptions();
       const targetUser = html.querySelector('#dd-target-user')?.value || null;
-      if (opts.textLayers?.length || opts.imageLayers?.length || opts.charIntro) {
+      if (opts.textLayers?.length || opts.imageLayers?.length || opts.videoLayers?.length || opts.seqLayers?.length || opts.audioLayers?.length || opts.soundUrl || opts.charIntro) {
         const soundUrl = html.querySelector('#dd-textpic-sound')?.value?.trim();
         const soundVol = parseFloat(sndNum?.value ?? '0.7');
-        if (soundUrl) _cinematic()?.playCustomSound?.(soundUrl, { volume: soundVol });
-        const dd = _cinematic();
+        // The runtime owns audio too, including target-user routing.
+        const dd = _runtime();
         if (dd) dd.applyEffect('text', opts, targetUser);
-        else _warnNoCinematic();
+
       }
     });
     html.querySelector('[data-action="copy-macro"]')?.addEventListener('click', () => {
       const opts = collectOptions();
       const targetUser = html.querySelector('#dd-target-user')?.value || null;
-      navigator.clipboard?.writeText(_cinematic()?.generateTextMacro?.(opts, targetUser) ?? '')
+      navigator.clipboard?.writeText(_runtime().generateTextMacro(this._collectOptions?.() ?? opts, targetUser))
         .then(() => ui.notifications?.info(game.i18n.localize('DRAMADIRECTOR.macroCopied')));
     });
     html.querySelector('[data-action="dismiss-text"]')?.addEventListener('click', () => {
       const targetUser = html.querySelector('#dd-target-user')?.value || null;
-      _cinematic()?.dismissText?.(targetUser);
+      _runtime()?.dismissText?.(targetUser);
     });
     html.querySelector('[data-action="clear"]')?.addEventListener('click', () => {
-      _cinematic()?.clearEffects?.(html.querySelector('#dd-target-user')?.value || null);
+      _runtime()?.clearEffects?.(html.querySelector('#dd-target-user')?.value || null);
     });
     html.querySelector('[data-action="browse-textpic-sound"]')?.addEventListener('click', () => {
       new (foundry.applications.apps.FilePicker.implementation)({ type:'audio', location:'data',
@@ -2107,6 +2101,7 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
       };
       return opts;
     };
+    this._collectOptions = _injectedCollect;
     // Re-assign the closure ref used by the button handlers below.
     // The Show handler already captured `collectOptions` — patch the const
     // by rebinding the reference indirectly via the global game state.
@@ -2126,10 +2121,10 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
       if (opts.textLayers?.length || opts.imageLayers?.length || opts.charIntro || opts.timeline?.clips?.length) {
         const soundUrl = html.querySelector('#dd-textpic-sound')?.value?.trim();
         const soundVol = parseFloat(html.querySelector('#dd-textpic-sound-vol')?.value ?? '0.7');
-        if (soundUrl) _cinematic()?.playCustomSound?.(soundUrl, { volume: soundVol });
-        const dd = _cinematic();
+        // The runtime owns audio too, including target-user routing.
+        const dd = _runtime();
         if (dd) dd.applyEffect('text', opts, targetUser);
-        else _warnNoCinematic();
+
       }
     }, true);
     html.querySelector('[data-action="preset-save"]')?.addEventListener('click', (ev) => {
@@ -2227,7 +2222,11 @@ export class TextPicsPanel extends HandlebarsApplicationMixin(foundry.applicatio
     _rebuildImageLayers();
     populateTokens();
     refreshPresetDropdown();
+    if (this._draft) { applyOptionsToPanel(this._draft); if (this._draft.timeline) html.querySelector('[data-mode="timeline"]')?.click(); }
+    this._cleanupPreview = () => { this._draft = _injectedCollect(); tlState.playing = false; if (tlState.rafId) cancelAnimationFrame(tlState.rafId); html.querySelectorAll('video,audio').forEach(v => v.pause()); };
   }
+  async close(options) { this._cleanupPreview?.(); this._cleanupPreview = null; return super.close(options); }
+
 }
 
 

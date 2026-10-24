@@ -1,3 +1,4 @@
+import { TextPicsRuntime } from './runtime.mjs';
 /**
  * Drama Director — Text & Pics — Module entry point
  *
@@ -5,17 +6,13 @@
  *   - World setting `textPresets` (array of named text/pic presets)
  *   - The TextPicsPanel ApplicationV2 (panel registered with the hub)
  *
- * Effects (rendering text/image overlays) are still produced by the cinematic
- * module's effect engine. The panel calls `game.dramaDirector.applyEffect(...)`
- * if available; without cinematic the panel still opens but the "Apply" button
- * shows a notification.
+ * Own runtime and socket; no Cinematic or Novella dependency.
  */
 
 import { TextPicsPanel } from './textpics-panel.mjs';
 
 const MODULE_ID = 'drama-director-textpics';
 const HUB_ID    = 'drama-director-hub';
-const CINEMATIC = 'drama-director-cinematic';
 
 function _ensureHub() {
   return game.modules.get(HUB_ID)?.api;
@@ -49,21 +46,19 @@ Hooks.once('setup', () => {
     color: '#3ec9e0',
     order: 40,
     open: () => {
-      // Soft-warn if cinematic is missing
-      if (!game.modules.get(CINEMATIC)?.active) {
-        ui.notifications?.warn(
-          game.i18n.localize('DDTEXTPICS.warn.cinematicMissing')
-            || 'Drama Director — Cinematic not enabled. Effects (Apply) will be unavailable.'
-        );
-      }
-      new TextPicsPanel().render(true);
+      if (game.user?.isGM) new TextPicsPanel().render(true);
     },
   });
 });
 
 // ── Convenience global so users can call from macros ────────────────────────
 Hooks.once('ready', () => {
+  TextPicsRuntime.init();
+  game.modules.get(MODULE_ID).api = TextPicsRuntime;
   globalThis.DDTextPics = {
+    applyEffect: (...args) => TextPicsRuntime.applyEffect(...args),
+    dismissText: (...args) => TextPicsRuntime.dismissText(...args),
+    openPanel: () => { if (game.user?.isGM) new TextPicsPanel().render(true); },
     getPresets() {
       try { return game.settings.get(MODULE_ID, 'textPresets') ?? []; }
       catch { return []; }
